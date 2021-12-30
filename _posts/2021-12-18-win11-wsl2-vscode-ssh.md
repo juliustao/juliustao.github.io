@@ -1,7 +1,34 @@
 ---
-title: "VSCode Remote SSH on Windows 11 with WSL2 Ubuntu"
+title: "VSCode SSH on Windows 11 🪟 with WSL2 Ubuntu 🐧"
 published: true
 ---
+
+# TL;DR
+
+Below are steps for VSCode remote development on Windows 11 through SSH of WSL2 Ubuntu.
+
+Why not use
+[Windows SSH](https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse)?
+I need some packages for SSH that are only available with Ubuntu.
+
+-   On Windows 11
+
+    -   [Install WSL2 Ubuntu](https://docs.microsoft.com/en-us/windows/wsl/install)
+    -   [Install VSCode](https://code.visualstudio.com/docs/setup/windows)
+    -   [Install VSCode Remote Extension Pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack)
+    -   [VSCode SSH from WSL](https://stackoverflow.com/a/66048792/10039100)
+        -   [SSH from interactive shell to source `~/.bashrc`](https://stackoverflow.com/a/70321075/10039100)
+
+-   In WSL2 Ubuntu
+
+    -   [Generate SSH key and add to `ssh-agent`](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
+    -   [Add SSH key to GitHub](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+    -   [Auto start `ssh-agent`](https://stackoverflow.com/a/24902046/10039100)
+    -   [Install Kerberos](https://tig.csail.mit.edu/operating-systems/csail-ubuntu/kerberos-gnu-linux/)
+    -   [Customize `~/.ssh/config`](https://tig.csail.mit.edu/operating-systems/csail-ubuntu/kerberos-gnu-linux/)
+
+-   Verify that your SSH command from a WSL2 Ubuntu terminal works.
+-   [Typing that command into VSCode](https://code.visualstudio.com/docs/remote/ssh#_connect-to-a-remote-host) should give you the full remote editing experience!
 
 # How it started
 
@@ -34,13 +61,13 @@ On Windows,
 [creating new SSH keys](https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_keymanagement)
 is straightforward.
 
-Configuring the SSH agent with
+Configuring the `ssh-agent` with
 [automatic startup and the key](https://dmtavt.com/post/2020-08-03-ssh-agent-powershell/)
 is also simple.
 
 The last step is to check if I can SSH with Powershell to the server.
 For security purposes, I must connect to the target server `deep-gpu-1.csail.mit.edu` through the jump server `jump.csail.mit.edu`.
-An inconvenient externality is that I must verify my password twice.
+For both connections, I must type my password.
 
 Good news! I can SSH successfully.
 What about VSCode?
@@ -52,7 +79,7 @@ After connecting, I can edit the remote files directly.
 
 Success!
 
-...except typing my password twice is annoying.
+. . . except typing my password twice is annoying 😩
 
 On my previous laptop, I set up
 [passwordless SSH with Kerberos tickets](https://tig.csail.mit.edu/operating-systems/csail-ubuntu/kerberos-gnu-linux/).
@@ -94,7 +121,7 @@ At this point, I file a help request with TIG, and they quickly confirm that usi
 Do I need to dual boot Ubuntu now?
 Not just yet.
 
-# Ubuntu inside Windows
+# Ubuntu inside Windows!
 
 Microsoft recently released
 [Windows Subsystem for Linux 2 (WSL2)](https://docs.microsoft.com/en-us/windows/wsl/about),
@@ -111,8 +138,8 @@ and
 with the same `~/.ssh` folder as my previous laptop.
 
 [Adding my key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
-to the SSH agent is also identical.
-The only difference is that WSL2 Ubuntu does not support `systemd`, so the SSH agent does not already start automatically.
+to the `ssh-agent` is also identical.
+The only difference is that WSL2 Ubuntu does not support `systemd`, so the `ssh-agent` does not already start automatically.
 However, there exist
 [multiple solutions](https://unix.stackexchange.com/a/90869),
 and I choose to install `keychain` and write `eval $(keychain --eval -q ~/.ssh/id_ed25519)` to my `~/.bashrc`.
@@ -141,11 +168,11 @@ The default executable is the `ssh` on the `PATH`, which would be the Windows SS
 The trick is replacing the SSH executable with a `ssh.bat` file that pipes VSCode arguments `%*` into the command `C:\Windows\system32\wsl.exe ssh %*`.
 When VSCode runs the `.bat` file, it will run in a WSL shell the `ssh` command with arguments `%*`.
 
-## Forward SSH agent
+## Forward `ssh-agent`
 
 I soon encounter an issue where I can `git push` properly in Windows terminal but encounter a public key error in a VSCode terminal.
 
-Running `ssh -T git@github.com` also fails with a public key error, so my SSH agent is not forwarded properly.
+Running `ssh -T git@github.com` also fails with a public key error, so my `ssh-agent` is not forwarded properly.
 
 After some wrong approaches like modifying [local VSCode settings](https://github.com/microsoft/vscode-remote-release/issues/2926) or the
 [remote SSH config](https://github.com/Microsoft/vscode-remote-release/issues/16), I finally realize the issue is that `wsl.exe` does not source `~/.bashrc`.
